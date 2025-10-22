@@ -1,0 +1,49 @@
+import streamlit as st
+import pandas as pd
+
+st.set_page_config(page_title="New-Gen Biotics ROI Calculator", layout="wide")
+
+st.title("New-Gen Biotics ROI Calculator")
+
+# Inputs
+machines = st.number_input("Number of Machines", min_value=1, value=1, step=1)
+daily_income = st.number_input("Daily Extra Income per Room ($)", min_value=0.0, value=10.0)
+
+# Fixed values
+equipment_cost = 3500
+watts = 12
+elec_rate = 0.35
+days_per_month = 30
+refill_cost = 250
+months = 120
+
+# Calculations
+kw = watts / 1000
+monthly_elec_cost = kw * 24 * elec_rate * days_per_month
+monthly_income = daily_income * days_per_month
+monthly_expenses = monthly_elec_cost + refill_cost
+net_profit_per_machine = monthly_income - monthly_expenses
+net_profit_all = net_profit_per_machine * machines
+
+break_even = equipment_cost / net_profit_per_machine if net_profit_per_machine > 0 else None
+total_break_even = (equipment_cost * machines) / net_profit_all if net_profit_all > 0 else None
+
+# Chart data
+df = pd.DataFrame({
+    "Month": list(range(1, months + 1)),
+    "Cumulative Profit": [(net_profit_all * m) - (equipment_cost * machines) for m in range(1, months + 1)]
+})
+
+st.line_chart(df.set_index("Month"))
+
+# Summary
+st.subheader("Variable Summary (All Machines)")
+st.write(f"**Number of Machines:** {machines}")
+st.write(f"**Total Monthly Income:** ${monthly_income * machines:,.2f}")
+st.write(f"**Total Monthly Expenses:** ${monthly_expenses * machines:,.2f}  "
+         f"(${monthly_elec_cost:.2f} Electricity + ${refill_cost:.2f} Refill)")
+st.write(f"**Net Monthly Profit (All):** ${net_profit_all:,.2f}")
+st.write(f"**Profit Per Machine:** ${net_profit_per_machine:,.2f}")
+st.write(f"**Break Even (per machine):** {break_even:.1f} months" if break_even else "N/A")
+st.write(f"**Total Machine Cost:** ${equipment_cost * machines:,.2f}")
+st.write(f"**Time to Pay Back All Machines:** {total_break_even:.1f} months" if total_break_even else "N/A")
